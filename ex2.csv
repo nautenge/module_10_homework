@@ -1,0 +1,124 @@
+using System;
+using System.Collections.Generic;
+
+public abstract class FileSystemComponent
+{
+    protected string name;
+
+    public FileSystemComponent(string name)
+    {
+        this.name = name;
+    }
+
+    public abstract void Display(int depth);
+    public abstract int GetSize();
+}
+
+public class File : FileSystemComponent
+{
+    private int size;
+
+    public File(string name, int size) : base(name)
+    {
+        this.size = size;
+    }
+
+    public override void Display(int depth)
+    {
+        Console.WriteLine(new String(' ', depth) + $"- File: {name} ({size} KB)");
+    }
+
+    public override int GetSize()
+    {
+        return size;
+    }
+}
+
+public class Directory : FileSystemComponent
+{
+    private List<FileSystemComponent> components = new List<FileSystemComponent>();
+
+    public Directory(string name) : base(name) { }
+
+    public override void Display(int depth)
+    {
+        Console.WriteLine(new String(' ', depth) + $"+ Directory: {name}");
+        foreach (var component in components)
+        {
+            component.Display(depth + 2);
+        }
+    }
+
+    public override int GetSize()
+    {
+        int totalSize = 0;
+        foreach (var component in components)
+        {
+            totalSize += component.GetSize();
+        }
+        return totalSize;
+    }
+
+    public void Add(FileSystemComponent component)
+    {
+        if (!components.Contains(component))
+        {
+            components.Add(component);
+            Console.WriteLine($"Added {component.GetType().Name} '{component.name}' to Directory '{name}'");
+        }
+        else
+        {
+            Console.WriteLine($"{component.GetType().Name} '{component.name}' already exists in Directory '{name}'");
+        }
+    }
+
+    public void Remove(FileSystemComponent component)
+    {
+        if (components.Contains(component))
+        {
+            components.Remove(component);
+            Console.WriteLine($"Removed {component.GetType().Name} '{component.name}' from Directory '{name}'");
+        }
+        else
+        {
+            Console.WriteLine($"{component.GetType().Name} '{component.name}' does not exist in Directory '{name}'");
+        }
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        File file1 = new File("File1.txt", 500);
+        File file2 = new File("File2.txt", 1200);
+        File file3 = new File("File3.jpg", 3000);
+
+        Directory root = new Directory("Root");
+        Directory documents = new Directory("Documents");
+        Directory images = new Directory("Images");
+
+        root.Add(documents);
+        root.Add(images);
+
+        documents.Add(file1);
+        documents.Add(file2);
+
+        images.Add(file3);
+
+        Console.WriteLine("File System Structure:");
+        root.Display(0);
+        Console.WriteLine($"\nTotal size of '{root.name}' directory: {root.GetSize()} KB");
+
+        File file4 = new File("NewFile.doc", 750);
+        documents.Add(file4);
+        Console.WriteLine($"\nAfter adding '{file4.name}':");
+        root.Display(0);
+        Console.WriteLine($"\nTotal size of '{root.name}' directory: {root.GetSize()} KB");
+
+        documents.Remove(file2);
+        Console.WriteLine($"\nAfter removing '{file2.name}':");
+        root.Display(0);
+        Console.WriteLine($"\nTotal size of '{root.name}' directory: {root.GetSize()} KB");
+    }
+}
